@@ -1,0 +1,10 @@
+1.0 — Édition Audi R8
+- Projet complet recréé et réglé pour Audi R8 coupé 2 portes essence.
+- Interface autonome (index.html + js/config.js, sans dépendance réseau en roulage).
+- Pipeline Blender R8 : build2.py (découpe portes AVG/AVD + coffre avant), flows.py,
+  render_top.py, recolor.py. make_pack.py → pack « audi-r8 » installable par clé USB.
+- Wrapper Android : MainActivity (WebView HOME), CanBridge (props « hcn » Junsun),
+  CarText (lecture fenêtre portes CarCan via accessibilité), LogCan (journal diag),
+  CanWatchService (overlay alerte + fenêtre portes par-dessus les apps).
+- Écran Android Auto (template officiel : état R8 + vitesse — Google interdit les
+  launchers tiers sur l'écran projeté).

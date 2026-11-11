@@ -1,0 +1,46 @@
+name: Build APK (R8 Launcher)
+
+# INSTALLATION : ce fichier doit finir en .github/workflows/build-apk.yml
+# à la racine du repo GitHub (voir GITHUB.md). Il est stocké ici car les
+# dossiers pointés ne sont pas autorisés dans l'éditeur.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Contrôle du projet
+        run: |
+          test -f settings.gradle || (echo "MANQUE settings.gradle à la racine" && exit 1)
+          test -f app/build.gradle || (echo "MANQUE app/build.gradle" && exit 1)
+          test -f app/src/main/AndroidManifest.xml || (echo "MANQUE AndroidManifest.xml" && exit 1)
+          test -f app/src/main/assets/www/index.html || (echo "MANQUE www/index.html" && exit 1)
+          test -f app/src/main/assets/www/js/config.js || (echo "MANQUE js/config.js" && exit 1)
+          echo "Projet complet OK"
+
+      - name: Build APK debug
+        run: gradle :app:assembleDebug --stacktrace
+
+      - name: Artefact APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: R8-Launcher-APK
+          path: app/build/outputs/apk/debug/*.apk

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>R8 Launcher</title>
+<script src="js/config.js"></script>
+<style>
+:root{--red:#cf0036;--bg:#0b0b0b;--card:#1c1c1c;--line:#333;--txt:#f0f0f0;--mut:#9a9a9a;--ok:#3ccf7e}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+body.light{--bg:#ececec;--card:#fff;--line:#d5d5d5;--txt:#161616;--mut:#5c5c5c}
+#boot{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
+#boot[hidden]{display:none}
+.bootbox{background:#161616;color:#f0f0f0;border:1px solid #333;border-radius:18px;padding:28px;max-width:420px;width:100%;text-align:center}
+#launcher{display:flex;min-height:100vh}
+#dock{width:76px;background:#111;border-right:1px solid #262626;display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:8px;position:sticky;top:0;height:100vh}
+.dockbtn{width:56px;height:56px;border-radius:16px;border:1px solid #333;background:#1e1e1e;color:#fff;font-size:22px;cursor:pointer}
+.dockbtn.on{background:var(--red);border-color:var(--red)}
+#dockClock{font-size:11px;color:#9a9a9a;margin-top:auto;text-align:center;line-height:1.5}
+#main{flex:1;padding:14px 16px 60px;max-width:1180px;margin:0 auto;width:100%}
+#topbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+#topbar h1{font-size:18px;margin:0}
+.sub{color:var(--mut);font-size:13px}
+#alert{display:none;background:#3a0d18;border:1px solid var(--red);border-radius:12px;padding:10px 14px;margin:0 0 12px;font-size:14px}
+#alert.show{display:block}
+.grid{display:grid;grid-template-columns:1.15fr .85fr;gap:12px}
+@media(max-width:860px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
+.card h3{margin:0 0 4px;font-size:15px}
+.mut{color:var(--mut);font-size:13px}
+#heroWrap{display:flex;justify-content:center;position:relative;min-height:200px}
+#heroWrap img{max-width:100%;border-radius:12px;display:block}
+#heroBtns{position:absolute;inset:auto 0 6px 0;display:flex;justify-content:center;gap:8px}
+.ovbtn{background:rgba(0,0,0,.65);color:#fff;border:1px solid #555;border-radius:99px;padding:8px 14px;font-size:13px;cursor:pointer}
+.ovbtn.open{background:var(--red);border-color:var(--red)}
+#doorState{font-size:14px;margin-top:8px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+@media(max-width:520px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+body.light .stat{background:#f1f1f1}
+.stat b{font-size:20px;display:block}
+.stat span{font-size:11px;color:var(--mut)}
+.rowbtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.btn{background:var(--red);color:#fff;border:0;border-radius:12px;padding:13px 22px;font-size:15px;font-weight:700;cursor:pointer;margin:6px 6px 0 0}
+.btn.ghost{background:#2a2a2a;border:1px solid #444}
+body.light .btn.ghost{background:#e2e2e2;border-color:#bbb;color:#111}
+#eq{display:flex;gap:3px;align-items:flex-end;height:26px;margin:8px 0}
+#eq i{width:6px;background:var(--red);border-radius:3px;height:6px}
+#eq.play i{animation:eq .7s ease-in-out infinite alternate}
+#eq.play i:nth-child(2n){animation-delay:.2s}#eq.play i:nth-child(3n){animation-delay:.4s}
+@keyframes eq{to{height:26px}}
+#prog{height:6px;background:#333;border-radius:99px;overflow:hidden}
+#prog i{display:block;height:100%;width:0;background:var(--red)}
+.apps{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(max-width:520px){.apps{grid-template-columns:repeat(3,1fr)}}
+.app{background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:14px;padding:14px 6px;font-size:12px;cursor:pointer;color:var(--txt);text-align:center}
+.app b{font-size:24px;display:block;margin-bottom:4px}
+.ent{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.ent small{color:var(--mut);display:block}
+select{background:#111;color:#fff;border:1px solid #444;border-radius:10px;padding:10px;font-size:14px}
+body.light select{background:#fff;color:#111}
+#sheet{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:150;display:flex;align-items:flex-end;justify-content:center}
+#sheet[hidden]{display:none}
+#sheetIn{background:#161616;color:#f0f0f0;border:1px solid #333;border-radius:18px 18px 0 0;max-width:640px;width:100%;max-height:88vh;overflow:auto;padding:22px}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#000;color:#fff;border:1px solid #444;padding:10px 18px;border-radius:99px;font-size:14px;z-index:300;display:none}
+@media(max-width:700px){
+  #launcher{flex-direction:column}
+  #dock{flex-direction:row;width:100%;height:62px;position:fixed;left:0;right:0;bottom:0;top:auto;border-right:0;border-top:1px solid #262626;z-index:100;padding:6px 8px;gap:6px;justify-content:space-around}
+  .dockbtn{width:46px;height:46px;font-size:20px}
+  #dockClock{display:none}
+  #main{padding:10px 10px 84px}
+}
+@media print{body>*{display:none!important}#printArea{display:block!important;position:static;background:#fff;color:#000}}
+#printArea{display:none}
+</style>
+</head>
+<body>
+<div id="boot"><div class="bootbox"><div style="font-size:40px">🏁</div><h2 id="bootTitle">Prêt à partir</h2><ul id="bootList" style="text-align:left;color:#9a9a9a;font-size:14px;line-height:1.9;list-style:none;padding:0"></ul><button class="btn" id="goBtn">C'est parti</button></div></div>
+<div id="launcher">
+<nav id="dock"><button class="dockbtn on" data-a="home" title="Accueil">🏠</button><button class="dockbtn" data-a="nav" title="Navigation">🧭</button><button class="dockbtn" data-a="music" title="Musique">🎵</button><button class="dockbtn" data-a="phone" title="Téléphone">📞</button><button class="dockbtn" data-a="settings" title="Réglages">⚙️</button><div id="dockClock">--<br>--</div></nav>
+<div id="main">
+<div id="topbar"><h1 id="carName">R8</h1><span class="sub" id="carSub"></span><span style="flex:1"></span><button class="btn ghost" id="diagBtn" style="padding:10px 14px;font-size:13px">🧪 Simuler : porte AVG</button></div>
+<div id="alert" role="alert"></div>
+<div class="grid"><div>
+<div class="card"><h3>🚗 Véhicule <span class="mut" id="packTag"></span></h3><div class="mut">Glisse pour tourner • touche un ouvrant.</div>
+<div id="heroWrap"><img id="heroImg" alt="Audi R8"><div id="heroBtns"></div></div>
+<div id="doorState" class="mut">Tout est fermé.</div>
+<div class="stats"><div class="stat"><b id="stSpeed">0</b><span>km/h</span></div><div class="stat"><b id="stFuel">62%</b><span>carburant</span></div><div class="stat"><b id="stBatt">12,4 V</b><span>batterie</span></div><div class="stat"><b id="stTemp">18 °C</b><span>extérieur</span></div></div>
+<div class="rowbtns"><button class="btn ghost" id="driveBtn">▶ Simuler : rouler</button><button class="btn ghost" id="closeBtn">■ Tout fermer</button></div></div>
+<div class="card"><h3>🔧 Carnet d'entretien</h3><div id="entList"></div><div class="rowbtns"><button class="btn ghost" id="pdfBtn">🧾 Exporter en PDF</button></div></div>
+</div><div>
+<div class="card"><h3>🎵 Musique</h3><div><b id="track">R8 Radio</b></div><div id="eq"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div id="prog"><i></i></div><div class="rowbtns"><button class="btn ghost" id="playBtn">⏸ Pause</button><button class="btn ghost" id="nextBtn">⏭ Titre suivant</button></div></div>
+<div class="card"><h3>📱 Applis</h3><div class="apps" id="apps"></div></div>
+<div class="card"><h3>⚙️ Réglages</h3><div class="rowbtns"><select id="themeSel"><option value="auto">Thème : auto</option><option value="dark">Thème : sombre</option><option value="light">Thème : clair</option></select><button class="btn ghost" id="wipeBtn">Réinitialiser l'entretien</button></div><p class="mut" id="canLine"></p></div>
+</div></div>
+</div></div>
+<div id="sheet" hidden><div id="sheetIn"><h2 style="margin-top:0">🧪 Test sans la voiture</h2><p class="mut">Mêmes gestes que l'étape 09 du guide : simule un ouvrant, vérifie la carte Véhicule, puis « Tout fermer ».</p><div class="rowbtns"><button class="btn ghost" data-sim="avg">Porte conducteur</button><button class="btn ghost" data-sim="avd">Porte passager</button><button class="btn ghost" data-sim="frunk">Coffre avant</button></div><div class="rowbtns"><button class="btn" id="closeSheet">Fermer</button></div></div></div>
+<div id="toast"></div><div id="printArea"></div>
+<script>
+(function(){
+"use strict";
+var C = window.R8_CONFIG || {"car":{"name":"R8","model":"Audi R8 coupé","fuel":"essence"},"carPack":false,"comboAnim":["avg","avd","frunk"],"doorViews":{"avg":"door_avg","avd":"door_avd","frunk":"frunk"},"entretien":[]};
+var S = {doors:{avg:false,avd:false,frunk:false},speed:0,target:0,view:0,playing:true};
+function $(id){return document.getElementById(id);}
+function toast(m){var t=$("toast");t.textContent=m;t.style.display="block";clearTimeout(t._h);t._h=setTimeout(function(){t.style.display="none";},2200);}
+function store(k,v){try{if(v===undefined)localStorage.removeItem("r8-"+k);else localStorage.setItem("r8-"+k,v);}catch(e){}}
+function load(k){try{return localStorage.getItem("r8-"+k);}catch(e){return null;}}
+
+$("carName").textContent=C.car.name; $("carSub").textContent=C.car.model+" · "+C.car.fuel;
+$("packTag").textContent=C.carPack?"· pack audi-r8":"· Pack voiture non installé";
+$("bootTitle").textContent="Prêt à partir — "+C.car.name;
+$("canLine").textContent="CAN : Junsun « hcn » + CarCan + SimpleSoft VW (voir docs/CAN.md). Pont natif : CanBridge.";
+
+function clock(){var d=new Date(),p=function(n){return(n<10?"0":"")+n;};$("dockClock").innerHTML=p(d.getHours())+":"+p(d.getMinutes())+"<br>"+p(d.getDate())+"/"+p(d.getMonth()+1);}
+setInterval(clock,5000);clock();
+
+/* Vues : pack R8 si présent, sinon schéma de secours embarqué */
+var NAMES={avg:"porte conducteur",avd:"porte passager",frunk:"coffre avant"};
+var FALLBACK='data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="600" height="340" viewBox="0 0 600 340"><rect x="150" y="20" width="300" height="300" rx="110" fill="#8f979e"/><rect x="210" y="110" width="180" height="70" rx="16" fill="#20262b"/><rect x="230" y="200" width="140" height="60" rx="12" fill="#c7ced4"/><rect x="200" y="30" width="200" height="34" rx="14" fill="#ffe9a8"/></svg>');
+function heroSrc(){
+  if(!C.carPack) return FALLBACK;
+  var open=[];Object.keys(S.doors).forEach(function(k){if(S.doors[k])open.push(k);});
+  if(open.length===1&&C.doorViews[open[0]]) return "img/car/"+C.doorViews[open[0]]+"_3.webp";
+  return "img/car/hero_"+("0"+S.view).slice(-2)+".webp";
+}
+function paint(){
+  var img=$("heroImg"); img.onerror=function(){this.onerror=null;this.src=FALLBACK;}; img.src=heroSrc();
+  var open=Object.keys(S.doors).filter(function(k){return S.doors[k];});
+  $("doorState").textContent=open.length?("Ouvert : "+open.map(function(k){return NAMES[k];}).join(" + ")+" 🟠"):"Tout est fermé.";
+  document.querySelectorAll("#heroBtns .ovbtn").forEach(function(b){b.classList.toggle("open",!!S.doors[b.dataset.k]);});
+  try{if(window.CarBridge)CarBridge.setState(S.speed,open.map(function(k){return NAMES[k];}).join(","));}catch(e){}
+  try{if(window.LogCan)LogCan.log("doors="+open.join("+")+" speed="+S.speed);}catch(e){}
+}
+var hb=$("heroBtns");
+[["avg","🚪 AVG"],["avd","🚪 AVD"],["frunk","🧳 Avant"]].forEach(function(p){
+  var b=document.createElement("button");b.className="ovbtn";b.dataset.k=p[0];b.textContent=p[1];
+  b.onclick=function(){S.doors[p[0]]=!S.doors[p[0]];paint();checkAlert();};hb.appendChild(b);});
+/* Glisser sur la voiture = plateau tournant */
+var sx=null;
+$("heroWrap").addEventListener("touchstart",function(e){sx=e.touches[0].clientX;},{passive:true});
+$("heroWrap").addEventListener("touchend",function(e){if(sx===null)return;var dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>30){S.view=(S.view+(dx<0?1:47))%48;paint();}sx=null;},{passive:true});
+
+$("diagBtn").onclick=function(){$("sheet").hidden=false;};
+$("closeSheet").onclick=function(){$("sheet").hidden=true;};
+document.querySelectorAll("[data-sim]").forEach(function(b){b.onclick=function(){S.doors[b.dataset.sim]=true;paint();checkAlert();$("sheet").hidden=true;toast("Simulation : "+NAMES[b.dataset.sim]+" ouverte");};});
+$("closeBtn").onclick=function(){S.doors={avg:false,avd:false,frunk:false};S.target=0;$("driveBtn").textContent="▶ Simuler : rouler";paint();checkAlert();};
+$("driveBtn").onclick=function(){if(S.target>0){S.target=0;this.textContent="▶ Simuler : rouler";}else{S.target=72;this.textContent="⏸ S'arrêter";}};
+setInterval(function(){if(S.speed<S.target)S.speed=Math.min(S.target,S.speed+4);else if(S.speed>S.target)S.speed=Math.max(S.target,S.speed-9);$("stSpeed").textContent=S.speed;checkAlert();try{if(window.CarBridge)CarBridge.setState(S.speed,"");}catch(e){}},400);
+function checkAlert(){var open=Object.keys(S.doors).some(function(k){return S.doors[k];});var a=$("alert");
+  if(open&&S.speed>5){a.innerHTML="⚠️ <b>Un ouvrant est ouvert en roulant !</b> "+Object.keys(S.doors).filter(function(k){return S.doors[k];}).map(function(k){return NAMES[k];}).join(", ");a.classList.add("show");}
+  else a.classList.remove("show");}
+
+var tracks=["R8 Radio — Night Cruise","Synthwave Drive","V8 Idle"],ti=0;
+$("playBtn").onclick=function(){S.playing=!S.playing;this.textContent=S.playing?"⏸ Pause":"▶ Lecture";$("eq").classList.toggle("play",S.playing);};
+$("eq").classList.add("play");
+$("nextBtn").onclick=function(){ti=(ti+1)%tracks.length;$("track").textContent=tracks[ti];};
+setInterval(function(){if(!S.playing)return;var b=$("prog").firstElementChild,w=parseFloat(b.style.width||"0")+0.7;if(w>100)w=0;b.style.width=w+"%";},300);
+
+var apps=[["🧭","Navigation"],["📞","Téléphone"],["💬","Messages"],["🎵","Musique"],["🔧","Entretien"],["📻","Radio"],["📷","Caméra"],["⚙️","Réglages"]];
+$("apps").innerHTML=apps.map(function(a){return '<button class="app" data-n="'+a[1]+'"><b>'+a[0]+'</b>'+a[1]+"</button>";}).join("");
+document.querySelectorAll(".app").forEach(function(b){b.onclick=function(){toast(b.dataset.n+" : branche ton appli ici (Réglages › Applis par défaut)");};});
+document.querySelectorAll(".dockbtn").forEach(function(b){b.onclick=function(){document.querySelectorAll(".dockbtn").forEach(function(x){x.classList.remove("on");});b.classList.add("on");window.scrollTo({top:0,behavior:"smooth"});};});
+
+var DEF=C.entretien&&C.entretien.length?C.entretien:[{"titre":"Vidange + filtre à huile","quand":"tous les 15 000 km"},{"titre":"Filtres air / habitacle","quand":"tous les 2 ans"},{"titre":"CT","quand":"selon date"}];
+function ent(){try{return JSON.parse(load("ent")||"null")||DEF.map(function(){return false;});}catch(e){return DEF.map(function(){return false;});}}
+function drawEnt(){var st=ent();$("entList").innerHTML=DEF.map(function(d,i){return '<label class="ent"><input type="checkbox" data-i="'+i+'"'+(st[i]?" checked":"")+'><span>'+d.titre+"<small>"+d.quand+"</small></span></label>";}).join("");
+  document.querySelectorAll("#entList input").forEach(function(c){c.onchange=function(){var s=ent();s[+c.dataset.i]=c.checked;store("ent",JSON.stringify(s));};});}
+drawEnt();
+$("wipeBtn").onclick=function(){store("ent");drawEnt();};
+$("pdfBtn").onclick=function(){var st=ent();$("printArea").innerHTML="<h1>Carnet d'entretien — "+C.car.model+"</h1><ul>"+DEF.map(function(d,i){return "<li>"+(st[i]?"[x] ":"[ ] ")+d.titre+" — "+d.quand+"</li>";}).join("")+"</ul>";window.print();};
+
+function theme(v){if(v==="auto")v=(new Date().getHours()>=20||new Date().getHours()<7)?"dark":"light";document.body.classList.toggle("light",v==="light");}
+$("themeSel").onchange=function(){store("theme",this.value);theme(this.value);};
+var th=load("theme")||"auto";$("themeSel").value=th;theme(th);
+
+var warns=[];
+if(!C.carPack)warns.push("🚗 Pack voiture non installé — tout le reste fonctionne");
+warns.push("⛽ Carburant : 62 % — OK");warns.push("🔋 Batterie : 12,4 V — OK");warns.push("🚪 Ouvrants : fermés — OK");
+$("bootList").innerHTML=warns.map(function(w){return "<li>"+w+"</li>";}).join("");
+$("goBtn").onclick=function(){$("boot").hidden=true;};
+paint();
+})();
+</script>
+</body>
+</html>

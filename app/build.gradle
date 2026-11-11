@@ -1,0 +1,39 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'fr.r8.launcher'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'fr.r8.launcher'
+        minSdk 26
+        targetSdk 34
+        versionCode 1
+        versionName '1.0'
+    }
+
+    signingConfigs {
+        // « keystore.properties » à la racine (storeFile avec des /) pour signer
+        // release avec TA clé. Sinon : variante debug (clé du PC).
+        // storeFile=C:/Android/cles/r8launcher.jks
+        // storePassword=...
+        // keyAlias=r8launcher
+        // keyPassword=...
+    }
+
+    buildTypes {
+        debug {}
+        release { minifyEnabled false }
+    }
+    buildFeatures { buildConfig true }
+}
+
+dependencies {
+    implementation 'androidx.core:core-ktx:1.13.1'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    // Écran Android Auto (template officiel — Google interdit les launchers tiers).
+    implementation 'androidx.car.app:app:1.7.0'
+}
